@@ -1,31 +1,52 @@
 package com.jwt.api.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
-
-import com.jwt.api.service.CustomUserDetailsService;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig extends WebSecurityConfigurerAdapter{
+public class SecurityConfig {
 	
-	@Autowired
-	private CustomUserDetailsService userDetailsService;
-	
-	@Override
-	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-		auth.userDetailsService(userDetailsService);
-	}
-	
-	@SuppressWarnings("deprecation")
 	@Bean
-	public static NoOpPasswordEncoder passwordEncoder() {
-	return (NoOpPasswordEncoder) NoOpPasswordEncoder.getInstance();
+	public UserDetailsService userDetailsService(PasswordEncoder encoder) {
+		UserDetails admin = User.withUsername("chaitra")
+				.password(encoder.encode("pwd1"))
+				.roles("ADMIN")
+				.build();
+		UserDetails user = User.withUsername("John")
+				.password(encoder.encode("pwd2"))
+				.roles("USER")
+				.build();
+		
+		return new InMemoryUserDetailsManager(admin,user);
 	}
+	
+	@Bean
+	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+		return http.csrf().disable()
+				.authorizeHttpRequests()
+				.requestMatchers("/welcome").permitAll()
+				.and()
+				.authorizeHttpRequests().requestMatchers("/getAll").authenticated()
+				.and().formLogin()
+				.and()
+				.build();
+	}
+	
+	@Bean
+	public PasswordEncoder encoder() {
+		return new BCryptPasswordEncoder();
+	}
+	
+	
 
 }
