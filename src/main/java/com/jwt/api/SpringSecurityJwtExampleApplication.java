@@ -4,12 +4,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.jwt.api.entity.User;
+import com.jwt.api.entity.UserInfo;
 import com.jwt.api.repository.UserRepository;
 
 import jakarta.annotation.PostConstruct;
@@ -20,13 +20,19 @@ public class SpringSecurityJwtExampleApplication {
 	@Autowired
 	private UserRepository repository;
 	
-	/*
-	 * @PostConstruct public void initUsers() { List<User> userList = Stream.of( new
-	 * User(1234,"Chaitra","password", "chai@gmail.com"), new User(4567, "John" ,
-	 * "password", "john@gmail.com"), new User(8910, "Max" , "password",
-	 * "max@gmail.com") ).collect(Collectors.toList());
-	 * repository.saveAll(userList); }
-	 */
+	@Autowired
+	private PasswordEncoder passwordEncoder;
+
+	@PostConstruct
+	public void initUsers() {
+		List<UserInfo> userList = Stream
+				.of(new UserInfo(1234, "Chaitra", passwordEncoder.encode("pwd"), "chai@gmail.com", "ROLE_ADMIN"),
+						new UserInfo(4567, "John", passwordEncoder.encode("pwd"), "john@gmail.com", "ROLE_USER"),
+						new UserInfo(8910, "Max", passwordEncoder.encode("pwd"), "max@gmail.com", "ROLE_USER"))
+				.collect(Collectors.toList());
+		repository.saveAll(userList);
+	}
+	 
 	public static void main(String[] args) {
 		SpringApplication.run(SpringSecurityJwtExampleApplication.class, args);
 	}
